@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateQuestionsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('questions', function (Blueprint $table) {
+            $table->id();
+            $table->integer('album_id');
+            $table->text('link');
+            $table->string('question');
+            $table->string('question_quiz');
+            $table->string('slug')->unique();
+            $table->text('answer');
+            $table->tinyInteger('type')->default(0);
+            $table->tinyInteger('status')->default(0);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('questions');
+    }
+}
