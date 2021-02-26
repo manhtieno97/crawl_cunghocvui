@@ -3,15 +3,14 @@
 @php
 
 $sites = \App\Models\Question::getSite();
-
-
+$status = \App\Models\Question::getStatuses();
 @endphp
 
 @section('header')
     <div class="container-fluid">
         <div class="title mb-2">
             <h2>
-                <span class="text-capitalize">Crawl site</span>
+                <span class="text-capitalize">Upload data</span>
                 <small id="datatable_info_stack"></small>
             </h2>
         </div>
@@ -29,6 +28,18 @@ $sites = \App\Models\Question::getSite();
                                         @if(!empty($sites ))
                                             @foreach($sites as $key => $site)
                                                 <option value="{{ $key }}" data-item="{{ $key }}">{{ $site }}</option>
+                                            @endforeach
+                                        @endif
+
+                                    </select>
+                                </div>
+                                <div class="col-md-3 col-sm-3 col-xs-12">
+                                    <label class="mb-0">Chọn trạng thái </label>
+                                    <select name="status"  class="form-control selectpicker" data-live-search="true" required>
+                                        <option value="">-- Chọn trạng thái --</option>
+                                        @if(!empty($status ))
+                                            @foreach($status as $key => $statu)
+                                                <option value="{{ $key }}" data-item="{{ $key }}">{{ $statu }}</option>
                                             @endforeach
                                         @endif
 

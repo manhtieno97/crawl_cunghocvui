@@ -48,6 +48,15 @@ class QuestionCrudController extends CrudController
             function($value) { // if the filter is active
                 $this->crud->addClause('where', 'id', $value);
             });
+        $this->crud->addFilter([
+            'type'  => 'text',
+            'name'  => 'question',
+            'label' => 'Câu hỏi'
+        ],
+            false,
+            function($value) { // if the filter is active
+                $this->crud->addClause('where', 'question', 'LIKE', "%$value%");
+            });
 
         $this->crud->addFilter([
             'name'  => 'status',

@@ -45,7 +45,12 @@ class QuizCrawler {
             dump('Parsing ' . $url);
             $html = ( new Guzzle( $this->client ) )->getHtml( $url );
             $data = $this->processHtml( $html );
-            if((!empty($data['content'])) && (!empty($data['source_title']))){
+            if((!empty($data['content']))
+                && (!empty($data['source_title']))
+                && (!empty($data['grade']))
+                && (!empty($data['subject']))
+                && (!empty($data['answers']) || !empty($data['suggestion']))
+            ){
                 if(Question::firstOrCreate(
                     ['question' => $data['content']],
                     [
@@ -55,6 +60,7 @@ class QuizCrawler {
                         'disk' => config("crawl.".$this->site.".disk"),
                         'file' => $data_file,
                         'site' => config("crawl.".$this->site.".site"),
+                        'status' => Question::STATUS_QUESTION_DEFAULT
                     ]
                 )) {
                     $data['url'] = $url;
@@ -146,7 +152,7 @@ class QuizCrawler {
         try {
             $answers = $crawler->filterXPath( '//ul[@id="itvc20player"]/li[@class="lch"]/ul[contains(@class, "dstl")]/li' );
             $answers->each( function ( Crawler $li ) use ( &$data, $images ) {
-                $data['choices'][] = $this->src_to_base64_image( trim($li->html()), $images);
+                $data['choices'][] = $this->src_to_base64_image( trim($li->text()), $images);
             });
         } catch ( \Exception $ex ) {
 

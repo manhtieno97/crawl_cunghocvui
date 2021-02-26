@@ -8,17 +8,16 @@ use http\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mockery\Exception;
-
+use Carbon\Carbon;
 class CrawlController extends Controller
 {
-    const id_max_default = 10000000;
+    const id_max_default = 100;
     const id_min_default = 1;
 
     public function getCrawl()
     {
         return view('admin.crawl_by_id');
     }
-
 
     public function postCrawl(Request $request)
     {
@@ -42,48 +41,70 @@ class CrawlController extends Controller
         }
         return redirect('admin/crawl-id');
     }
+
     public function getUpload()
     {
         return view('admin.upload_data');
     }
+
     public function postUpload(Request $request)
     {
+        $status = Question::STATUS_QUESTION_DEFAULT;
+        if(!empty($request->status))
+        {
+            $status = (int)$request->status;
+        }
+        $data = DB::table('questions')->where('status', $status);
         if(!empty($request->site))
         {
-
-        }else{
-            DB::table('questions')->where('status', Question::STATUS_QUESTION_DEFAULT)
-                ->chunkById(100, function ($questions) {
-                    foreach ($questions as $question) {
-                        if (\Storage::disk($question->disk)->exists($question->file)) {
-                            $contents = json_decode(\Storage::disk($question->disk)->get($question->file),true);
-                            $api = "http://dev.cunghocvui.com/api/creawl/add-post";
-                            $client = new \GuzzleHttp\Client();
-                            $data = [];
-                            $data['hash'] = '2fb1177038d055e19779d1588deaa2c1';
-                            $data['time'] = 2131231;
-                            $data['data'] = $contents;
-                            try {
-                                $response = $client->request('POST', 'http://dev.cunghocvui.com/api/creawl/add-post', [
-                                    'headers' => [
-                                        'Accept'     => 'application/json',
-                                    ],
-                                    'form_params' => $data
-                                ]);
-                                if(isset($response) && json_decode($response->getBody()->getContents(),true)['status'] == true)
-                                {
-                                    Question::where('id', $question->id)->update(['status' => Question::STATUS_QUESTION_UPLOAD]);
-                                }else{
-                                    Question::where('id', $question->id)->update(['status' => Question::STATUS_QUESTION_ERROR]);
-                                }
-                            }catch (\Exception $ex )
-                            {
-                                Question::where('id', $question->id)->update(['status' => Question::STATUS_QUESTION_ERROR]);
-                            }
-
-                        }
-                    }
-                });
+            $data = $data->where('site', $request->site);
         }
+        $data->chunkById(100, function ($questions) {
+            foreach ($questions as $question) {
+                if (\Storage::disk($question->disk)->exists($question->file)) {
+                    $contents = json_decode(\Storage::disk($question->disk)->get($question->file),true);
+                    $api = config('crawl.api');
+                    $client = new \GuzzleHttp\Client();
+                    $data = [];
+                    $data['time'] = strtotime(Carbon::now());
+                    $data['data'] = $contents;
+                    $data['hash'] = $this->getHash($contents, $data['time']);
+
+                    try {
+                        $response = $client->request('POST', $api, [
+                            'headers' => [
+                                'Accept'     => 'application/json',
+                            ],
+                            'form_params' => $data
+                        ]);
+                        $repon = json_decode($response->getBody()->getContents(),true);
+                        if(isset($response) && $repon['status'] == true)
+                        {
+                            Question::where('id', $question->id)->update([
+                                'status' => Question::STATUS_QUESTION_UPLOAD,
+                                'id_post' => $repon['id_post']
+                            ]);
+
+                        }else{
+                            Question::where('id', $question->id)->update(['status' => Question::STATUS_QUESTION_ERROR]);
+                        }
+                    }catch (\Exception $ex )
+                    {
+                        Question::where('id', $question->id)->update(['status' => Question::STATUS_QUESTION_ERROR]);
+                    }
+
+                }
+            }
+        });
+        return redirect('admin/question');
+    }
+    public function getHash($data ,$time)
+    {
+        $hash = '';
+        if(!empty($data['content']))
+        {
+            $hash = config('crawl.private_key').$data['content'] . $time;
+        }
+        return md5($hash);
     }
 }

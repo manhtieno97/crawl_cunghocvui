@@ -48,7 +48,12 @@ class QuizCrawler {
             dump('Parsing ' . $url);
             $html = ( new Guzzle( $this->client ) )->getHtml( $url );
             $data = $this->processHtml( $html );
-            if((!empty($data['content'])) && (!empty($data['source_title']))){
+            if((!empty($data['content']))
+                && (!empty($data['source_title']))
+                && (!empty($data['grade']))
+                && (!empty($data['subject']))
+                && (!empty($data['answers']) || !empty($data['suggestion']))
+            ){
                 if(Question::firstOrCreate(
                     ['question' => $data['content']],
                     [

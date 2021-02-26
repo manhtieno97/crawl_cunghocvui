@@ -12,6 +12,7 @@ class Question extends Model
     const STATUS_QUESTION_DEFAULT = 0;
     const STATUS_QUESTION_UPLOAD = 1;
     const STATUS_QUESTION_ERROR = 2;
+    const STATUS_QUESTION_PUBLIC = 3;
 
     /*
     |--------------------------------------------------------------------------
@@ -23,7 +24,7 @@ class Question extends Model
     // protected $primaryKey = 'id';
     // public $timestamps = false;
     protected $guarded = ['id'];
-    protected $fillable = ['album', 'link', 'question', 'answer', 'type', 'disk', 'file', 'site', 'status'];
+    protected $fillable = ['album', 'link', 'question', 'answer', 'type', 'disk', 'file', 'site', 'status','id_post'];
     // protected $hidden = [];
     // protected $dates = [];
 
@@ -39,6 +40,7 @@ class Question extends Model
             self::STATUS_QUESTION_DEFAULT => "Default",
             self::STATUS_QUESTION_UPLOAD => "Uploaded",
             self::STATUS_QUESTION_ERROR => "Error",
+            self::STATUS_QUESTION_PUBLIC => "Public",
         ];
     }
     public static function getSite()

@@ -11,4 +11,7 @@ return [
         'disk' => 'public',
         'folder' => 'khoahoc_vietjack'
     ],
+
+    'api' => 'http://dev.cunghocvui.com/api/creawl/add-post',
+    'private_key' => env('CRAWL_PRIVATE_KEY', 'crawl_cunghocvui'),
 ];

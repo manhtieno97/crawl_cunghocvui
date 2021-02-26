@@ -29,7 +29,7 @@ class TestCommand extends Command
      */
     public function handle()
     {
-        for ($i = 110001; $i<=120000; $i++)
+        for ($i = 110000; $i<=120000; $i++)
         {
             dump("running : " .$i);
 //            $this->call('khoahoc_vietjack', [
@@ -37,7 +37,7 @@ class TestCommand extends Command
 //            ]);
 
             $this->call('hoc247net', [
-                '--id' => $i, '--data-dir' => 'storage/app/public/hoc247'
+                '--id' => $i, '--site' => 'hoc247net'
             ]);
 
            /* $this->call('loigiaihay', [

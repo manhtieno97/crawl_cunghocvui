@@ -14,7 +14,6 @@ Route::group([
     ),
     'namespace'  => 'App\Http\Controllers\Admin',
 ], function () { // custom admin routes
-    Route::crud('album', 'AlbumCrudController');
     Route::crud('question', 'QuestionCrudController');
 
     Route::get('crawl-id','CrawlController@getCrawl');
