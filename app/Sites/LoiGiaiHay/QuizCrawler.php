@@ -11,6 +11,7 @@ namespace App\Sites\LoiGiaiHay;
 
 use App\Crawler\Browsers\Guzzle;
 use App\Libs\IdToPath;
+use App\Models\Question;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DomCrawler\Crawler;
@@ -18,9 +19,10 @@ use Symfony\Component\DomCrawler\Image;
 
 class QuizCrawler {
 
+    const subject_default = ['Toán','Hóa','Sinh'];
     protected $prefix = "https://loigiaihay.com/de--a__id__.html";
     protected $client;
-    protected $data_dir;
+    protected $site;
     protected $force;
 
     /**
@@ -31,34 +33,48 @@ class QuizCrawler {
      *
      * @throws \Exception
      */
-    public function __construct($data_dir, $force = false) {
+    public function __construct($site, $force = false) {
         $this->client = new Client( config( 'crawler.browsers.guzzle' ) );
-        if(!is_dir( $data_dir )){
-            throw new \Exception($data_dir . " must be a directory ");
-        }
-        $this->data_dir = realpath( rtrim( $data_dir, "/" ) );
+        $this->site = trim( $site,' ');
         $this->force = $force;
     }
 
     public function process( $id ) {
-        $data_file = $this->data_dir . "/" . IdToPath::make( $id, "quiz.json");
-        if(file_exists( $data_file ) && !$this->force){
-            throw new \Exception("Id " . $id . " crawled at " . $data_file );
-        }
-
-        $old_mask = umask(0);
-        @mkdir( preg_replace( "/\/[^\/]+$/", "", $data_file ), 0777, true );
-        umask($old_mask);
-
+        $data_file = config("crawl.".$this->site.".folder") . '/' . IdToPath::make( $id, "");
         $url = $this->makeUrl( $id );
-
         if ( $url ) {
             dump('Parsing ' . $url);
             $html = ( new Guzzle( $this->client ) )->getHtml( $url );
-            $data = $this->processHtml( $html );
-            if($data['content'] && $data['answers'] && (count($data['content']) > 1)){
-                $data['url'] = $url;
-                file_put_contents( $data_file, json_encode( $data ) );
+            $results = $this->processHtml( $html );
+            if(!empty($results['content']) && !empty($results['answers'])
+                                && (count($results['content']) > 1)
+                                && (count($results['answers']) == count($results['content']) )
+            ){
+                $results['data']['url'] = $url;
+                foreach ($results['content'] as $key => $result)
+                {
+                    $results['data']['content'] = $result[0];
+                    unset($result[0]);
+                    $results['data']['choices'] = $result;
+                    $results['data']['answers'] = $results['answers'][$key];
+                    if(Question::firstOrCreate(
+                        ['question' => $results['data']['content']],
+                        [
+                            'album' => $results['data']['source_title'],
+                            'link' => $url,
+                            'type' => $results['data']['type'],
+                            'disk' => config("crawl.".$this->site.".disk"),
+                            'file' => $data_file.'c'.($key+1).'.quiz.json',
+                            'site' => config("crawl.".$this->site.".site"),
+                            'status' => Question::STATUS_QUESTION_DEFAULT
+                        ]
+                    )) {
+                        $results['data']['url'] = $url;
+                        \Storage::disk(config("crawl.".$this->site.".disk"))->put($data_file.'c'.($key+1).'.quiz.json', json_encode( $results['data'] ));
+                    }
+                }
+
+
             }
         } else {
             return false;
@@ -89,15 +105,24 @@ class QuizCrawler {
         }
         if(!empty($keywords))
         {
-            try {
-                $data['grade'] = trim(preg_replace('/lớp.+/', '$1', $keywords));
-            } catch ( \Exception $ex ) {
+            if($keywords == 'Toán 11 nâng cao'){
+                $data['subject'] = 'Toán nâng cao';
+                $data['grade'] = 'Lớp 11';
+            }else{
+                try {
+                    $data['subject'] = trim(preg_replace('/lớp.+/', '$1', $keywords));
+                } catch ( \Exception $ex ) {
 
-            }
-            try {
-                $data['subject'] = trim( str_replace( $data['grade'], '', $keywords ));
-            } catch ( \Exception $ex ) {
+                }
+                try {
+                    $data['grade'] = trim( str_replace( $data['subject'], '', $keywords ));
+                } catch ( \Exception $ex ) {
 
+                }
+                if(in_array($data['subject'],self::subject_default))
+                {
+                    $data['subject'] = $data['subject'].' học';
+                }
             }
         }
         try {
@@ -130,7 +155,7 @@ class QuizCrawler {
                     $image = $this->src_to_base64_image( $node->html(), $images);
                     $content[] = $image;
                 }
-                if ((preg_match( "/^Question [0-9]+/", $node->text()) || preg_match( "/^Câu [0-9]:+/", $node->text()) || preg_match( "/^Câu [0-9]\(NB|TH|VD|VDC\)+/", $node->text())  || preg_match( "/^Câu [0-9][0-9]:+/", $node->text())  || preg_match( "/^[A-D]\.+/", $node->text())) && $check)  {
+                if((preg_match( "/^Question [0-9]+/", $node->text()) || preg_match( "/^Câu [0-9]:+/", $node->text()) || preg_match( "/^Câu [0-9]\(NB|TH|VD|VDC\)+/", $node->text())  || preg_match( "/^Câu [0-9][0-9]:+/", $node->text())  || preg_match( "/^[A-D]\.+/", $node->text())) && $check)  {
                     $content[] = $node->text();
                 }
                 if(preg_match( "/^Lời giải chi tiết|ĐÁP ÁN|Lời giải chi tiết+/", $node->text()))
@@ -149,10 +174,9 @@ class QuizCrawler {
                 }
             });
             $question = [];
-
             for ($i = 0; $i < count($content); $i++) {
                 $question[] = $content[$i];
-                if ( $i == count($content)-1 ||preg_match( "/^Question [0-9]+/", $content[$i+1]) || preg_match( "/^Câu [0-9]+/", $content[$i+1])) {
+                if ( $i == count($content) - 1 || preg_match( "/^Question [0-9]+/", $content[$i+1]) || preg_match( "/^Câu [0-9]+/", $content[$i+1])) {
                     $questions[] = $question;
                     $question = [];
                 }
@@ -161,7 +185,7 @@ class QuizCrawler {
             $kq = [];
             for ($i = 0; $i < count($answers); $i++) {
                 $answer[] = $answers[$i];
-                if ( $i == count($answers)-1 || preg_match( "/^Question [0-9]+/", $answers[$i+1]) || preg_match( "/^Câu [0-9]+/", $answers[$i+1]) || preg_match( "/^Câu [0-9][0-9]+/", $answers[$i+1])) {
+                if ( $i == count($answers) - 1 || preg_match( "/^Question [0-9]+/", $answers[$i+1]) || preg_match( "/^Câu [0-9]+/", $answers[$i+1]) || preg_match( "/^Câu [0-9][0-9]+/", $answers[$i+1])) {
                     $kq[] = $answer;
                     $answer = [];
                 }
@@ -169,15 +193,11 @@ class QuizCrawler {
         } catch ( \Exception $ex ) {
             dump("Get content error " . $ex->getMessage());
         }
-        $data['content'] = $questions;
-        try {
-
-            $data['answers'] = $kq;
-        } catch ( \Exception $ex ) {
-            dump("Get answers error " . $ex->getMessage());
-        }
-        dd($data);
-        return $data;
+        return [
+            'data' => $data,
+            'content' => $questions,
+            'answers' => $kq
+        ];
     }
 
     protected function makeUrl( $id ) {

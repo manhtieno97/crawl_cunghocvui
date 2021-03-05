@@ -1,6 +1,6 @@
 <?php
 /**
- * Crawl quizzes with url example https://hoc247.net/cau-hoi-qua-trinh-do-thi-hoa-nuoc-ta-hien-nay-co-dac-diem-la--qid111368.html
+ * Crawl quizzes with url example https://tech12h.com/bai-hoc/trac-nghiem-toan-12-hoc-ki-i-p1.html
  * User: hocvt
  * Date: 2019-10-31
  * Time: 16:38
@@ -18,7 +18,7 @@ use Symfony\Component\DomCrawler\Image;
 
 class QuizCrawler {
 
-    protected $prefix = "https://hoc247.net/cau-hoi--qid__id__.html";
+    protected $prefix = "https://tech12h.com/bai-hoc/trac-nghiem--.html";
     protected $client;
     protected $data_dir;
     protected $force;

@@ -29,21 +29,9 @@ class TestCommand extends Command
      */
     public function handle()
     {
-        for ($i = 110000; $i<=120000; $i++)
-        {
-            dump("running : " .$i);
-//            $this->call('khoahoc_vietjack', [
-//                '--id' => $i, '--data-dir' => 'storage/app/public/khvietjack'
-//            ]);
-
-            $this->call('hoc247net', [
-                '--id' => $i, '--site' => 'hoc247net'
-            ]);
-
-           /* $this->call('loigiaihay', [
-                '--id' => $i, '--data-dir' => 'data/loigiaihay'
-            ]);*/
-        }
+        $this->call('loigiaihay', [
+            '--id' => 50032, '--site' => 'loigiaihay'
+        ]);
     }
 
     /**

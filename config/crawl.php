@@ -11,7 +11,12 @@ return [
         'disk' => 'public',
         'folder' => 'khoahoc_vietjack'
     ],
+    'loigiaihay' => [
+        'site' => 'loigiaihay',
+        'disk' => 'public',
+        'folder' => 'loigiaihay'
+    ],
 
-    'api' => 'http://dev.cunghocvui.com/api/creawl/add-post',
+    'api' => env('CRAWL_API', 'http://dev.cunghocvui.com/api/creawl/add-post'),
     'private_key' => env('CRAWL_PRIVATE_KEY', 'crawl_cunghocvui'),
 ];

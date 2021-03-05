@@ -21,7 +21,7 @@ $status = \App\Models\Question::getStatuses();
                     <div class="mb-2 row">
                         <div class="col-md-12 col-sm-12 col-xs-12">
                             <div class="row">
-                                <div class="col-md-4 col-sm-4 col-xs-12">
+                                <div class="col-md-5 col-sm-5 col-xs-12">
                                     <label class="mb-0">Chọn site <i>(*)</i></label>
                                     <select name="site"  class="form-control selectpicker" data-live-search="true" required>
                                         <option value="">-- Chọn site --</option>
@@ -33,7 +33,7 @@ $status = \App\Models\Question::getStatuses();
 
                                     </select>
                                 </div>
-                                <div class="col-md-3 col-sm-3 col-xs-12">
+                                <div class="col-md-5 col-sm-5 col-xs-12">
                                     <label class="mb-0">Chọn trạng thái </label>
                                     <select name="status"  class="form-control selectpicker" data-live-search="true" required>
                                         <option value="">-- Chọn trạng thái --</option>
@@ -44,10 +44,6 @@ $status = \App\Models\Question::getStatuses();
                                         @endif
 
                                     </select>
-                                </div>
-                                <div class="col-md-3 col-sm-3 col-xs-12">
-                                    <label class="mb-0">Số lượng </label>
-                                    <input class="form-control mr-2" type="number" name="number" id="">
                                 </div>
                                 <div class="col-md-2 col-sm-4 col-xs-12 mt-4">
                                     <a href="javascript:void(0)" onclick="upload()" class="btn btn-primary w-100 mr-2">Upload

@@ -13,7 +13,7 @@ class CrawlLoiGiaiHay extends Command
      *
      * @var string
      */
-    protected $signature = 'loigiaihay {--id= : Id of quiz} {--f|force : force re-crawl} {--d|data-dir= : Location of crawled data}';
+    protected $signature = 'loigiaihay {--id= : Id of quiz} {--f|force : force re-crawl} {--d|site= : Location of crawled data}';
 
     /**
      * The description of the command.
@@ -30,9 +30,9 @@ class CrawlLoiGiaiHay extends Command
     public function handle()
     {
         $id = $this->option('id');
-        $data_dir = $this->option('data-dir');
+        $site = $this->option('site');
         $force = $this->option('force');
-        $crawler = new QuizCrawler($data_dir, $force);
+        $crawler = new QuizCrawler($site, $force);
         if(strpos( $id, "-")){
             list( $id, $max) = explode( "-", $id, 2);
             for(;$id <= $max; $id++){

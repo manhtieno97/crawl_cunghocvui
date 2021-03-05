@@ -23,19 +23,17 @@ class CrawlController extends Controller
     {
         if(!empty($request->site))
         {
+            $id_from = self::id_min_default;
+            $id_to = self::id_max_default;
             if(!empty($request->id_from) && !empty($request->id_to) && ((int)$request->id_from < (int)$request->id_to))
             {
-                for ($i = (int)$request->id_from; $i <= (int)$request->id_to; $i++)
-                {
-                    dump('crawl id : '.$i .' site: '.$request->site);
-                    \Artisan::call($request->site, ['--id' => $i, '--site' => $request->site]);
-                }
-            }else{
-                for ($i = self::id_min_default; $i <= self::id_max_default; $i++)
-                {
-                    dump('crawl id : '.$i .' site: '.$request->site);
-                    \Artisan::call($request->site, ['--id' => $i, '--site' => $request->site]);
-                }
+                $id_from = (int)$request->id_from;
+                $id_to = (int)$request->id_to;
+            }
+            for ($i = $id_from; $i <= $id_to; $i++)
+            {
+                dump('crawl id : '.$i .' site: '.$request->site);
+                \Artisan::call($request->site, ['--id' => $i, '--site' => $request->site]);
             }
             return redirect('admin/question');
         }
